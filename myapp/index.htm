@@ -1,0 +1,19 @@
+<html>
+<head>
+    <script src="imrookie.js"> </script>
+ </head>
+<body>
+    <form id="login-form" action="http://127.0.0.1:8081/process_get" method="GET">
+
+    <input type="radio" name="Way" value="User">User<br>
+    <input type="radio" name="Way" value="Administrator">Administrator<br>
+
+    User Name: <input type="text" name="name">  <br>
+    Password: <input type="password" name="pwd"> <br>
+
+    <input type="submit" value="register" onclick="return Reg()">
+    <input type="submit" value="log in" onclick="return Log()">
+
+    </form>
+</body>
+</html>
