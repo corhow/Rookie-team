@@ -3,10 +3,10 @@
     <script src="imrookie.js"> </script>
  </head>
 <body>
-    <form id="login-form" action="http://127.0.0.1:8081/process_get" method="GET">
+    <form id="login-form" method="GET">
 
-    <input type="radio" name="Way" value="User">User<br>
-    <input type="radio" name="Way" value="Administrator">Administrator<br>
+    <input type="radio" id="user" name="Way" value="User" checked>User<br>
+    <input type="radio" id="administrator" name="Way" value="Administrator">Administrator<br>
 
     User Name: <input type="text" name="name">  <br>
     Password: <input type="password" name="pwd"> <br>

@@ -5,13 +5,16 @@ window.onload =function(){
 }
 
 function Reg(){
-    login_form.action='http://127.0.0.1:8081/register.htm';
+    login_form.action = '/register.htm';
+    login_form.method = 'GET';
     //return true;
 }
 
 function Log(){
-    login_form.action='https://www.baidu.com/';
-    //return true;
+    login_form.action = '';
+    login_form.method = 'POST';
+    // login_form.action='';
+    return true;
 }
 
 function Sure(){
@@ -24,6 +27,10 @@ function Sure(){
     });
     fs.writeLine("hello"); 
     fs.close();
-    //req.params.name;
-    login_form.action='http://127.0.0.1:8081/index.htm';
+    // login_form.action='http://127.0.0.1:8081/index.htm';
+}
+
+function Way(){
+    if(document.getElementById("user").checked)
+        return true;
 }
