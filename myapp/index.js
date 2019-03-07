@@ -13,9 +13,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //    res.sendfile( __dirname + '/photo.jpg');
 // });
 
-app.get('/*', function (req, res) {
-   res.sendFile( __dirname + "/" + req.path );
-})
+// app.get('/*', function (req, res) {
+//    res.sendFile( __dirname + "/" + req.path );
+// })
 
 app.post('/register.htm', function (req, res) {
 
