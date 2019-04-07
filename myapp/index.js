@@ -17,6 +17,11 @@ app.use((req, res, next) => {
    next();
 }); //现在还不知道是干啥用的！！！！！
 
+
+app.get('/', (req, res) => {
+   res.send('欢迎访问Rookie-team');
+});
+
 app.get('/index', function (req, res) {
    console.log(req.path);
    console.log(req.query);
