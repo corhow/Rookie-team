@@ -1,2 +1,5 @@
 .vscode/*
 myapp/node_modules/*
+
+config.js
+!example.config.js

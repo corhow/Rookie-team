@@ -1,15 +1,33 @@
 // Express文档
 // https://expressjs.com/zh-cn/4x/api.html
 
+var config = require('./config');
 var express = require('express');
+var mariadb = require('mariadb');
 var bodyParser = require('body-parser');
 var crypto = require('crypto');
 var fs = require('fs');
 var app = express();
- 
+
+// 创建数据库连接池并测试连接
+var pool = mariadb.createPool({ 
+   host: config.HOST, 
+   user: config.USER, 
+   password: config.PASSWORD,
+   database: "rookie"
+});
+pool.getConnection()
+   .then(conn => {
+      console.log("成功连接到数据库");
+      conn.query("SELECT * from table1")
+         .then(rows => {
+            console.log(rows);
+         });
+   });
+
+// Express相关设定
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
-
 
 
 app.use((req, res, next) => {
@@ -18,9 +36,21 @@ app.use((req, res, next) => {
 }); //现在还不知道是干啥用的！！！！！
 
 
-app.get('/', (req, res) => {
-   res.send('欢迎访问Rookie-team');
+// 输出测试数据库中的id数量
+app.get('/', async (req, res) => {
+   let res_string = "欢迎访问Rookie-team，当前有";
+   
+   await pool.getConnection()
+   .then(async conn => {
+      await conn.query("SELECT * from table1")
+         .then(rows => {
+            res_string += `${rows.length}个id。`;
+         });
+   });
+   
+   res.send(res_string);
 });
+
 
 app.get('/index', function (req, res) {
    console.log(req.path);
