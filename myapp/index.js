@@ -10,20 +10,34 @@ var fs = require('fs');
 var app = express();
 
 // 创建数据库连接池并测试连接
-var pool = mariadb.createPool({ 
-   host: config.HOST, 
-   user: config.USER, 
-   password: config.PASSWORD,
-   database: "rookie"
-});
-pool.getConnection()
-   .then(conn => {
-      console.log("成功连接到数据库");
-      conn.query("SELECT * from table1")
-         .then(rows => {
-            console.log(rows);
-         });
+var connection;
+
+(async function () {
+   var pool = await mariadb.createPool({ 
+      host: config.HOST, 
+      user: config.USER, 
+      password: config.PASSWORD,
+      database: "rookie"
    });
+   
+   
+   await pool.getConnection()
+      .then(async conn => {
+         console.log("成功连接到数据库");
+         await conn.query("SELECT * from user")  // Query查询
+            .then(records => {
+               for (let i = 0; i < records.length; ++i) {
+                  let record = records[i];
+                  console.log(record.UserName, record['PassWord']);
+               }
+               connection = conn;
+            });``
+      })
+      .catch(err => {
+         console.log(err);
+      });
+})();
+
 
 // Express相关设定
 app.use(express.static('public'));
@@ -40,23 +54,34 @@ app.use((req, res, next) => {
 app.get('/', async (req, res) => {
    let res_string = "欢迎访问Rookie-team，当前有";
    
-   await pool.getConnection()
-   .then(async conn => {
-      await conn.query("SELECT * from table1")
-         .then(rows => {
-            res_string += `${rows.length}个id。`;
-         });
-   });
+   await connection.query('SELECT COUNT(*) AS count FROM user')
+      .then(function (records) {
+         res_string += records[0].count;
+         res_string += '名用户';
+      });
+
    
    res.send(res_string);
 });
 
 
-app.get('/index', function (req, res) {
+app.get('/index', async function (req, res) {
    console.log(req.path);
    console.log(req.query);
+   var UserPWD;
+   var records;
 
-   if(req.query.action=='login')
+   await connection.query('SELECT UserName, Password FROM user')
+      .then(function(UserPW){
+         UserPWD=UserPW;
+      })
+
+   await connection.query('SELECT COUNT(*) AS count FROM user')
+      .then(function(record){
+         records=record;
+      })
+
+   if(req.query.action==='login')
    {
       let name=req.query.username;
       let password=req.query.password;
@@ -64,14 +89,24 @@ app.get('/index', function (req, res) {
       // name = crypto.createHash('sha1').update(name).digest('hex');
       // password = crypto.createHash('sha1').update(password).digest('hex');
 
-      let data=fs.readFileSync('message.txt');
-      let users=data.toString().split('\n');
-      let auth=0;
-      for(let i=0;i<users.length;++i)
-      {
-         let[usr,pwd]=users[i].split(' ');
+      // let data=fs.readFileSync('message.txt');
+      // let users=data.toString().split('\n');
+      // let auth=0;
+      // for(let i=0;i<users.length;++i)
+      // {
+      //    let[usr,pwd]=users[i].split(' ');
 
-         if(usr===name&&password===pwd)
+      //    if(usr===name&&password===pwd)
+      //    {
+      //       auth=true;
+      //       console.log('登陆成功');
+      //       break;
+      //    }
+      // }
+      let auth=0;
+      for(let i=0;i<records[0].count;++i)
+      {
+         if(UserPWD[0]===name&&password===UserPWD)
          {
             auth=true;
             console.log('登陆成功');
@@ -83,7 +118,7 @@ app.get('/index', function (req, res) {
       else
          res.send('2');//用户名或者密码错误
    }
-   else if(req.query.action=='register')
+   else if(req.query.action==='register')
    {
       let name=req.query.r_username;
       let pwd=req.query.r_password;
@@ -92,83 +127,24 @@ app.get('/index', function (req, res) {
       // let sha1_pass = crypto.createHash('sha1').update(pwd).digest('hex');
       
       // let content = sha1_name + ' ' + sha1_pass;  // toBase64
-      let content = name + ' ' + pwd;
-      fs.writeFileSync('message.txt',content+'\n',{flag:'a'});
-      res.send('0');//用户注册成功，已经储存至文本
+      // let content = name + ' ' + pwd;
+      // fs.writeFileSync('message.txt',content+'\n',{flag:'a'});;
+
+      connection.query(`INSERT INTO user(UserName,PassWord) VALUES('${name}', '${pwd}')`)
+         .catch(err => {
+            console.log(err);
+         });
+      res.send('0');//用户注册成功
       console.log('注册成功');
    }
 });
 
 var server = app.listen(8080, function () {
 
-   var host = server.address().address;
+   var host = server.address().address || 'localhost';
    var port = server.address().port;
  
    console.log("应用实例，访问地址为 http://%s:%s", host, port);
  });
-
-// app.get('/public/photo.jpg', (req, res) => {
-//    res.sendfile( __dirname + '/photo.jpg');
-// });
-
-// app.get('/*', function (req, res) {
-//    res.sendFile( __dirname + "/" + req.path );
-// })
-
-// app.post('/register.htm', function (req, res) {
-
-//    if (req.body.name && req.body.pwd && req.body.pwd === req.body.pwd2) {
-//       let content = '' + req.body.name + ' ' + req.body.pwd;
-//       fs.writeFileSync('message.txt', content /* `${req.body.name} ${req.body.pwd}\n` */, { flag: 'a'} );
-//       res.send('用户注册成功');
-//    } 
-//    else {
-//       res.send('不知道为什么出错了');
-//    }
-   
-// });
-
-
-
-// app.post('/index.htm', function (req, res) {
-//    if(req.body.Way=='User'){
-//    if (req.body.name && req.body.pwd) {
-//       let data = fs.readFileSync('myapp/message.txt');
-//       let users = data.toString().split('\n');
-//       for (let i = 0; i < users.length; ++i) {
-//          let [usr, pwd] = users[i].split(' ');
-//          if (usr === req.body.name && pwd === req.body.pwd) {
-//             res.send('用户存在于用户表中，并且密码正确');
-//          }
-//          else {
-//             res.send('用户名或密码错误');
-//          }
-//       }
-//    }
-//    else{
-//       res.send('又不知道为什么出错了');
-//    }}
-//    else
-//    {
-//       if(req.body.name && req.body.pwd){
-//          if(req.body.name==10086&&req.body.pwd==10086){
-//             // let data = fs.readFileSync('myapp/message.txt');
-//             // let users = data.toString().split('\n');
-//             // for (let i = 0; i < users.length; ++i){
-//             //    let [usr, pwd] = users[i].split(' ');
-//             //    res.send(usr);
-//             // }
-//             res.send('管理员登陆');
-//          }
-//          else{
-//             res.send('管理员密码错误')
-//          }
-//       }
-//       else{
-//          res.send('还是不知道为什么错了')
-//       }
-//    }
-//    });
-
 
 

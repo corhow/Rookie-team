@@ -1,7 +1,7 @@
 import requests;
 
 data = {
-    'action': 'login',
+    'action': 'register',
     'username': '范宇豪',
     'password':'123',
     'r_username': '我叫永远的王',
