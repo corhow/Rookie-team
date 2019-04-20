@@ -4,7 +4,7 @@ data = {
     'action': 'register',
     'username': '范宇豪',
     'password':'123',
-    'r_username': '我叫永远的王',
+    'r_username': '我叫永远的王deBrother',
     'r_password': '123'
 }
 

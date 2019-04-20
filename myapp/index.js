@@ -1,6 +1,6 @@
 // Express文档
 // https://expressjs.com/zh-cn/4x/api.html
-
+const Sequelize = require('sequelize');
 var config = require('./config');
 var express = require('express');
 var mariadb = require('mariadb');
@@ -10,33 +10,7 @@ var fs = require('fs');
 var app = express();
 
 // 创建数据库连接池并测试连接
-var connection;
 
-(async function () {
-   var pool = await mariadb.createPool({ 
-      host: config.HOST, 
-      user: config.USER, 
-      password: config.PASSWORD,
-      database: "rookie"
-   });
-   
-   
-   await pool.getConnection()
-      .then(async conn => {
-         console.log("成功连接到数据库");
-         await conn.query("SELECT * from user")  // Query查询
-            .then(records => {
-               for (let i = 0; i < records.length; ++i) {
-                  let record = records[i];
-                  console.log(record.UserName, record['PassWord']);
-               }
-               connection = conn;
-            });``
-      })
-      .catch(err => {
-         console.log(err);
-      });
-})();
 
 
 // Express相关设定
@@ -54,7 +28,7 @@ app.use((req, res, next) => {
 app.get('/', async (req, res) => {
    let res_string = "欢迎访问Rookie-team，当前有";
    
-   await connection.query('SELECT COUNT(*) AS count FROM user')
+   await sequelize.query('SELECT COUNT(*) AS count FROM user')
       .then(function (records) {
          res_string += records[0].count;
          res_string += '名用户';
@@ -71,12 +45,12 @@ app.get('/index', async function (req, res) {
    var UserPWD;
    var records;
 
-   await connection.query('SELECT UserName, Password FROM user')
+   await sequelize.query('SELECT UserName, Password FROM user')
       .then(function(UserPW){
          UserPWD=UserPW;
       })
 
-   await connection.query('SELECT COUNT(*) AS count FROM user')
+   await sequelize.query('SELECT COUNT(*) AS count FROM user')
       .then(function(record){
          records=record;
       })
@@ -130,7 +104,7 @@ app.get('/index', async function (req, res) {
       // let content = name + ' ' + pwd;
       // fs.writeFileSync('message.txt',content+'\n',{flag:'a'});;
 
-      connection.query(`INSERT INTO user(UserName,PassWord) VALUES('${name}', '${pwd}')`)
+      await sequelize.query(`INSERT INTO user(UserName,PassWord) VALUES('${name}', '${pwd}')`)
          .catch(err => {
             console.log(err);
          });
@@ -147,4 +121,69 @@ var server = app.listen(8080, function () {
    console.log("应用实例，访问地址为 http://%s:%s", host, port);
  });
 
+//  Sequelize.sync()
+//    .then(()=>{
+//       var server = app.listen(8080, function () {
+
+//          var host = server.address().address || 'localhost';
+//          var port = server.address().port;
+       
+//          console.log("应用实例，访问地址为 http://%s:%s", host, port);
+//        });
+//    })
+
+
+const sequelize = new Sequelize('rookie', config.USER, config.PASSWORD, {
+   dialect: 'mariadb',
+   host: config.HOST,
+});
+
+sequelize.query("SELECT * from user",{ type: sequelize.QueryTypes.SELECT})
+   .then(records => {
+      for (let i = 0; i < records.length; ++i) {
+         let record = records[i];
+         console.log(record.UserName,record.PassWord);
+      }
+   })
+   .catch(err => {
+      console.log(err);
+   });
+// (async function () {
+//    var pool = await mariadb.createPool({ 
+//       host: config.HOST, 
+//       user: config.USER, 
+//       password: config.PASSWORD,
+//       database: "rookie"
+//    });
+   
+   
+//    await pool.getConnection()
+//       .then(async conn => {
+//          console.log("成功连接到数据库");
+//          await conn.query("SELECT * from user")  // Query查询
+//             .then(records => {
+//                for (let i = 0; i < records.length; ++i) {
+//                   let record = records[i];
+//                   console.log(record.UserName, record['PassWord']);
+//                }
+//                connection = conn;
+//             });
+//       })
+//       .catch(err => {
+//          console.log(err);
+//       });
+// })();
+sequelize.authenticate()
+    .then(() => {
+        console.log('Connection has been established successfully.');
+    })
+    .catch(err => {
+        console.error('Unable to connect to the database:', err);
+    });//测试环境是否成功搭建
+
+
+    const getRandomString = (len = 16) => {
+      const buf = crypto.randomBytes(len);
+      return buf.toString('hex');
+  }//生成随机数
 
